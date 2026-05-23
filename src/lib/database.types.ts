@@ -453,6 +453,14 @@ export type Database = {
         };
         Returns: string;
       };
+      get_accounting_snapshot: {
+        Args: {
+          p_tenant_id: string;
+          p_company_id: string;
+          p_fiscal_year_id: string;
+        };
+        Returns: Json;
+      };
       is_platform_admin: {
         Args: { check_user_id?: string };
         Returns: boolean;

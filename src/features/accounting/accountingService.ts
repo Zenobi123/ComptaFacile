@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { supabase } from "../../lib/supabase";
-import type { JournalEntryStatus } from "../../lib/database.types";
+import type { JournalEntryStatus, Json } from "../../lib/database.types";
 
 export type AccountingCompany = {
   id: string;
@@ -39,6 +39,40 @@ export type AccountingContext = {
   periods: AccountingPeriod[];
   journals: AccountingJournal[];
   accounts: AccountingAccount[];
+};
+
+export type SnapshotEntryLine = {
+  line_number: number;
+  account_number: string;
+  account_label: string;
+  label: string | null;
+  debit_amount: number;
+  credit_amount: number;
+};
+
+export type SnapshotEntry = {
+  id: string;
+  entry_date: string;
+  label: string;
+  reference: string | null;
+  status: JournalEntryStatus;
+  journal_code: string;
+  journal_label: string;
+  lines: SnapshotEntryLine[];
+};
+
+export type BalanceRow = {
+  account_id: string;
+  account_number: string;
+  label: string;
+  debit_total: number;
+  credit_total: number;
+  balance: number;
+};
+
+export type AccountingSnapshot = {
+  entries: SnapshotEntry[];
+  balance: BalanceRow[];
 };
 
 export const accountSchema = z.object({
@@ -224,4 +258,125 @@ export async function createJournalEntry(values: JournalEntryFormData) {
   }
 
   return data;
+}
+
+export async function loadAccountingSnapshot(
+  tenantId: string,
+  companyId: string,
+  fiscalYearId: string,
+): Promise<AccountingSnapshot> {
+  if (!supabase) {
+    return { entries: [], balance: [] };
+  }
+
+  const { data, error } = await supabase.rpc("get_accounting_snapshot", {
+    p_tenant_id: tenantId,
+    p_company_id: companyId,
+    p_fiscal_year_id: fiscalYearId,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return parseAccountingSnapshot(data);
+}
+
+function parseAccountingSnapshot(value: Json): AccountingSnapshot {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { entries: [], balance: [] };
+  }
+
+  const record = value as Record<string, Json>;
+
+  return {
+    entries: Array.isArray(record.entries)
+      ? record.entries.map(parseSnapshotEntry).filter((entry): entry is SnapshotEntry => Boolean(entry))
+      : [],
+    balance: Array.isArray(record.balance)
+      ? record.balance.map(parseBalanceRow).filter((row): row is BalanceRow => Boolean(row))
+      : [],
+  };
+}
+
+function parseSnapshotEntry(value: Json): SnapshotEntry | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const record = value as Record<string, Json>;
+
+  if (
+    typeof record.id !== "string" ||
+    typeof record.entry_date !== "string" ||
+    typeof record.label !== "string" ||
+    typeof record.status !== "string" ||
+    typeof record.journal_code !== "string" ||
+    typeof record.journal_label !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    id: record.id,
+    entry_date: record.entry_date,
+    label: record.label,
+    reference: typeof record.reference === "string" ? record.reference : null,
+    status: record.status as JournalEntryStatus,
+    journal_code: record.journal_code,
+    journal_label: record.journal_label,
+    lines: Array.isArray(record.lines)
+      ? record.lines.map(parseSnapshotEntryLine).filter((line): line is SnapshotEntryLine => Boolean(line))
+      : [],
+  };
+}
+
+function parseSnapshotEntryLine(value: Json): SnapshotEntryLine | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const record = value as Record<string, Json>;
+
+  if (
+    typeof record.line_number !== "number" ||
+    typeof record.account_number !== "string" ||
+    typeof record.account_label !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    line_number: record.line_number,
+    account_number: record.account_number,
+    account_label: record.account_label,
+    label: typeof record.label === "string" ? record.label : null,
+    debit_amount: typeof record.debit_amount === "number" ? record.debit_amount : 0,
+    credit_amount: typeof record.credit_amount === "number" ? record.credit_amount : 0,
+  };
+}
+
+function parseBalanceRow(value: Json): BalanceRow | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const record = value as Record<string, Json>;
+
+  if (
+    typeof record.account_id !== "string" ||
+    typeof record.account_number !== "string" ||
+    typeof record.label !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    account_id: record.account_id,
+    account_number: record.account_number,
+    label: record.label,
+    debit_total: typeof record.debit_total === "number" ? record.debit_total : 0,
+    credit_total: typeof record.credit_total === "number" ? record.credit_total : 0,
+    balance: typeof record.balance === "number" ? record.balance : 0,
+  };
 }

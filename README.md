@@ -71,6 +71,12 @@ Une fonction RPC `create_journal_entry` cree une ecriture comptable avec lignes 
 - debit total egal au credit total ;
 - au moins deux lignes.
 
+Une fonction RPC `get_accounting_snapshot` alimente les premieres vues de consultation :
+
+- dernieres ecritures de l'exercice avec leurs lignes ;
+- balance de travail par compte, hors brouillons ;
+- controle d'appartenance au tenant avant lecture.
+
 ### Prerequis local
 
 Installer Supabase CLI puis connecter le projet si necessaire :
