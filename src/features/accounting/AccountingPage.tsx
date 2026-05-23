@@ -1,4 +1,13 @@
-import { BookOpenCheck, CheckCircle2, Loader2, Plus, RefreshCw, Send } from "lucide-react";
+import {
+  BookOpenCheck,
+  CheckCircle2,
+  FileSpreadsheet,
+  Loader2,
+  Plus,
+  RefreshCw,
+  ScrollText,
+  Send,
+} from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { SectionHeader } from "../../components/SectionHeader";
@@ -7,8 +16,11 @@ import {
   createCompanyAccount,
   createJournalEntry,
   loadAccountingContext,
+  loadAccountingSnapshot,
   type AccountingAccount,
   type AccountingContext,
+  type AccountingSnapshot,
+  type SnapshotEntry,
 } from "./accountingService";
 
 type EntryLine = {
@@ -33,9 +45,15 @@ const fallbackContext: AccountingContext = {
   accounts: [],
 };
 
+const fallbackSnapshot: AccountingSnapshot = {
+  entries: [],
+  balance: [],
+};
+
 export function AccountingPage() {
   const { isConfigured } = useAuth();
   const [context, setContext] = useState<AccountingContext>(fallbackContext);
+  const [snapshot, setSnapshot] = useState<AccountingSnapshot>(fallbackSnapshot);
   const [isLoading, setIsLoading] = useState(isConfigured);
   const [isSavingAccount, setIsSavingAccount] = useState(false);
   const [isSavingEntry, setIsSavingEntry] = useState(false);
@@ -86,6 +104,18 @@ export function AccountingPage() {
       setContext(nextContext);
       setPeriodId((current) => current || nextContext.periods[0]?.id || "");
       setJournalId((current) => current || nextContext.journals[0]?.id || "");
+
+      if (nextContext.company && nextContext.fiscalYear) {
+        setSnapshot(
+          await loadAccountingSnapshot(
+            nextContext.company.tenant_id,
+            nextContext.company.id,
+            nextContext.fiscalYear.id,
+          ),
+        );
+      } else {
+        setSnapshot(fallbackSnapshot);
+      }
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Chargement impossible");
     } finally {
@@ -164,6 +194,7 @@ export function AccountingPage() {
       setTargetStatus("draft");
       setLines([{ ...emptyLine }, { ...emptyLine }]);
       setFeedback(`Ecriture creee : ${entryId}`);
+      await refreshContext();
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Ecriture non creee");
     } finally {
@@ -371,6 +402,82 @@ export function AccountingPage() {
           <p>Les ecritures validees restent protegees par les triggers deja en place.</p>
         </div>
       </section>
+
+      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <section className="rounded-lg border border-line bg-white/70 p-6 shadow-soft">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <ScrollText className="text-ledger" size={20} aria-hidden="true" />
+              <h2 className="text-lg font-semibold text-ink">Dernieres ecritures</h2>
+            </div>
+            <span className="text-sm font-semibold text-ink/55">
+              {snapshot.entries.length} lignes
+            </span>
+          </div>
+
+          <div className="mt-5 divide-y divide-line overflow-hidden rounded-lg border border-line bg-white">
+            {snapshot.entries.length ? (
+              snapshot.entries.map((entry) => <JournalEntryRow key={entry.id} entry={entry} />)
+            ) : (
+              <p className="px-4 py-5 text-sm leading-6 text-ink/55">
+                Aucune ecriture creee pour cet exercice.
+              </p>
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-line bg-white/70 p-6 shadow-soft">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <FileSpreadsheet className="text-ledger" size={20} aria-hidden="true" />
+              <h2 className="text-lg font-semibold text-ink">Balance de travail</h2>
+            </div>
+            <span className="text-sm font-semibold text-ink/55">
+              Hors brouillons
+            </span>
+          </div>
+
+          <div className="mt-5 overflow-x-auto rounded-lg border border-line bg-white">
+            <table className="w-full min-w-[560px] border-collapse text-sm">
+              <thead className="bg-surface text-left text-ink/58">
+                <tr>
+                  <th className="px-3 py-3 font-semibold">Compte</th>
+                  <th className="px-3 py-3 text-right font-semibold">Debit</th>
+                  <th className="px-3 py-3 text-right font-semibold">Credit</th>
+                  <th className="px-3 py-3 text-right font-semibold">Solde</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {snapshot.balance.length ? (
+                  snapshot.balance.map((row) => (
+                    <tr key={row.account_id}>
+                      <td className="px-3 py-3">
+                        <span className="font-semibold text-ink">{row.account_number}</span>
+                        <span className="ml-2 text-ink/58">{row.label}</span>
+                      </td>
+                      <td className="px-3 py-3 text-right font-medium text-ink">
+                        {formatAmount(row.debit_total)}
+                      </td>
+                      <td className="px-3 py-3 text-right font-medium text-ink">
+                        {formatAmount(row.credit_total)}
+                      </td>
+                      <td className="px-3 py-3 text-right font-semibold text-ink">
+                        {formatAmount(row.balance)}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td className="px-3 py-5 text-ink/55" colSpan={4}>
+                      Aucun mouvement a afficher pour la balance.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
@@ -390,6 +497,44 @@ function AccountRow({ account }: { account: AccountingAccount }) {
       <span className="font-semibold text-ink">{account.account_number}</span>
       <span className="truncate text-ink/62">{account.label}</span>
     </div>
+  );
+}
+
+function JournalEntryRow({ entry }: { entry: SnapshotEntry }) {
+  const debitTotal = entry.lines.reduce((sum, line) => sum + line.debit_amount, 0);
+  const creditTotal = entry.lines.reduce((sum, line) => sum + line.credit_amount, 0);
+
+  return (
+    <details className="group">
+      <summary className="grid cursor-pointer gap-3 px-4 py-4 transition hover:bg-surface md:grid-cols-[110px_1fr_130px_130px]">
+        <div>
+          <p className="font-semibold text-ink">{entry.entry_date}</p>
+          <p className="mt-1 text-xs font-semibold uppercase text-ink/45">{entry.status}</p>
+        </div>
+        <div>
+          <p className="font-semibold text-ink">{entry.label}</p>
+          <p className="mt-1 text-sm text-ink/55">
+            {entry.journal_code} - {entry.reference || "Sans reference"}
+          </p>
+        </div>
+        <p className="text-right font-semibold text-ink">{formatAmount(debitTotal)}</p>
+        <p className="text-right font-semibold text-ink">{formatAmount(creditTotal)}</p>
+      </summary>
+      <div className="border-t border-line bg-surface px-4 py-3">
+        <div className="space-y-2">
+          {entry.lines.map((line) => (
+            <div key={line.line_number} className="grid gap-2 rounded-md bg-white px-3 py-2 text-sm md:grid-cols-[1fr_120px_120px]">
+              <div>
+                <span className="font-semibold text-ink">{line.account_number}</span>
+                <span className="ml-2 text-ink/58">{line.account_label}</span>
+              </div>
+              <span className="text-right text-ink">{formatAmount(line.debit_amount)}</span>
+              <span className="text-right text-ink">{formatAmount(line.credit_amount)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </details>
   );
 }
 
