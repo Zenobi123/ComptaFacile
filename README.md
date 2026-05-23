@@ -91,6 +91,13 @@ Le module tresorerie ajoute :
 - RPC `create_treasury_transaction` avec controles de role et montant positif ;
 - RPC `get_treasury_snapshot` pour les soldes et derniers mouvements.
 
+Le module fiscalite ajoute :
+
+- declarations fiscales par exercice ;
+- suivi echeance, statut, montant et notes ;
+- RPC `create_tax_declaration` avec controles de role ;
+- RPC `get_tax_snapshot` pour calendrier fiscal et indicateurs.
+
 ### Prerequis local
 
 Installer Supabase CLI puis connecter le projet si necessaire :

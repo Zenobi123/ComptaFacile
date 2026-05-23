@@ -31,6 +31,7 @@ export type ThirdPartyType = "customer" | "supplier" | "administration" | "emplo
 export type SalesInvoiceStatus = "draft" | "issued" | "paid" | "cancelled";
 export type TreasuryAccountType = "bank" | "cash" | "mobile_money";
 export type TreasuryTransactionDirection = "inflow" | "outflow";
+export type TaxDeclarationStatus = "planned" | "prepared" | "submitted" | "paid" | "late";
 
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row;
@@ -542,6 +543,40 @@ export type Database = {
           updated_at?: string;
         }
       >;
+      tax_declarations: Table<
+        AuditColumns & {
+          id: string;
+          tenant_id: string;
+          company_id: string;
+          fiscal_year_id: string;
+          tax_type: string;
+          period_label: string;
+          due_date: string;
+          status: TaxDeclarationStatus;
+          amount_due: number;
+          submitted_at: string | null;
+          payment_reference: string | null;
+          notes: string | null;
+        },
+        {
+          id?: string;
+          tenant_id: string;
+          company_id: string;
+          fiscal_year_id: string;
+          tax_type: string;
+          period_label: string;
+          due_date: string;
+          status?: TaxDeclarationStatus;
+          amount_due?: number;
+          submitted_at?: string | null;
+          payment_reference?: string | null;
+          notes?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        }
+      >;
       audit_logs: Table<
         {
           id: string;
@@ -674,6 +709,28 @@ export type Database = {
         };
         Returns: Json;
       };
+      create_tax_declaration: {
+        Args: {
+          tenant_id: string;
+          company_id: string;
+          fiscal_year_id: string;
+          tax_type: string;
+          period_label: string;
+          due_date: string;
+          amount_due?: number;
+          status?: TaxDeclarationStatus;
+          notes?: string | null;
+        };
+        Returns: string;
+      };
+      get_tax_snapshot: {
+        Args: {
+          p_tenant_id: string;
+          p_company_id: string;
+          p_fiscal_year_id: string;
+        };
+        Returns: Json;
+      };
       is_platform_admin: {
         Args: { check_user_id?: string };
         Returns: boolean;
@@ -694,6 +751,7 @@ export type Database = {
       sales_invoice_status: SalesInvoiceStatus;
       treasury_account_type: TreasuryAccountType;
       treasury_transaction_direction: TreasuryTransactionDirection;
+      tax_declaration_status: TaxDeclarationStatus;
     };
     CompositeTypes: Record<string, never>;
   };
