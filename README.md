@@ -62,6 +62,15 @@ Une fonction RPC `create_company_onboarding` initialise le premier dossier d'une
 - journaux standards ;
 - entree d'audit.
 
+Une fonction RPC `create_journal_entry` cree une ecriture comptable avec lignes en controlant cote serveur :
+
+- appartenance et role autorise sur le tenant ;
+- periode ouverte ou en revue ;
+- journal actif ;
+- comptes actifs ;
+- debit total egal au credit total ;
+- au moins deux lignes.
+
 ### Prerequis local
 
 Installer Supabase CLI puis connecter le projet si necessaire :

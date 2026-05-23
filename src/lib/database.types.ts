@@ -438,6 +438,21 @@ export type Database = {
           fiscal_year_id: string;
         }[];
       };
+      create_journal_entry: {
+        Args: {
+          tenant_id: string;
+          company_id: string;
+          fiscal_year_id: string;
+          accounting_period_id: string;
+          journal_id: string;
+          entry_date: string;
+          label: string;
+          reference?: string | null;
+          target_status?: JournalEntryStatus;
+          lines?: Json;
+        };
+        Returns: string;
+      };
       is_platform_admin: {
         Args: { check_user_id?: string };
         Returns: boolean;
