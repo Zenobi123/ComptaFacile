@@ -29,6 +29,8 @@ export type JournalEntryStatus =
   | "reversed";
 export type ThirdPartyType = "customer" | "supplier" | "administration" | "employee" | "partner";
 export type SalesInvoiceStatus = "draft" | "issued" | "paid" | "cancelled";
+export type TreasuryAccountType = "bank" | "cash" | "mobile_money";
+export type TreasuryTransactionDirection = "inflow" | "outflow";
 
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row;
@@ -480,6 +482,66 @@ export type Database = {
           updated_at?: string;
         }
       >;
+      treasury_accounts: Table<
+        AuditColumns & {
+          id: string;
+          tenant_id: string;
+          company_id: string;
+          account_type: TreasuryAccountType;
+          name: string;
+          institution_name: string | null;
+          account_number: string | null;
+          currency: string;
+          opening_balance: number;
+          is_active: boolean;
+        },
+        {
+          id?: string;
+          tenant_id: string;
+          company_id: string;
+          account_type: TreasuryAccountType;
+          name: string;
+          institution_name?: string | null;
+          account_number?: string | null;
+          currency?: string;
+          opening_balance?: number;
+          is_active?: boolean;
+          created_by?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        }
+      >;
+      treasury_transactions: Table<
+        AuditColumns & {
+          id: string;
+          tenant_id: string;
+          company_id: string;
+          fiscal_year_id: string;
+          treasury_account_id: string;
+          direction: TreasuryTransactionDirection;
+          transaction_date: string;
+          label: string;
+          reference: string | null;
+          amount: number;
+        },
+        {
+          id?: string;
+          tenant_id: string;
+          company_id: string;
+          fiscal_year_id: string;
+          treasury_account_id: string;
+          direction: TreasuryTransactionDirection;
+          transaction_date: string;
+          label: string;
+          reference?: string | null;
+          amount: number;
+          created_by?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        }
+      >;
       audit_logs: Table<
         {
           id: string;
@@ -590,6 +652,28 @@ export type Database = {
         };
         Returns: Json;
       };
+      create_treasury_transaction: {
+        Args: {
+          tenant_id: string;
+          company_id: string;
+          fiscal_year_id: string;
+          treasury_account_id: string;
+          direction: TreasuryTransactionDirection;
+          transaction_date: string;
+          label: string;
+          amount: number;
+          reference?: string | null;
+        };
+        Returns: string;
+      };
+      get_treasury_snapshot: {
+        Args: {
+          p_tenant_id: string;
+          p_company_id: string;
+          p_fiscal_year_id: string;
+        };
+        Returns: Json;
+      };
       is_platform_admin: {
         Args: { check_user_id?: string };
         Returns: boolean;
@@ -608,6 +692,8 @@ export type Database = {
       journal_entry_status: JournalEntryStatus;
       third_party_type: ThirdPartyType;
       sales_invoice_status: SalesInvoiceStatus;
+      treasury_account_type: TreasuryAccountType;
+      treasury_transaction_direction: TreasuryTransactionDirection;
     };
     CompositeTypes: Record<string, never>;
   };

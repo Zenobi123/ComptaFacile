@@ -84,6 +84,13 @@ Le module commercial ajoute les fondations ventes :
 - RPC `create_sales_invoice` pour creer une facture avec totalisation serveur ;
 - RPC `get_billing_snapshot` pour les clients, dernieres factures et indicateurs de vente.
 
+Le module tresorerie ajoute :
+
+- comptes banque, caisse et mobile money ;
+- mouvements entrants et sortants ;
+- RPC `create_treasury_transaction` avec controles de role et montant positif ;
+- RPC `get_treasury_snapshot` pour les soldes et derniers mouvements.
+
 ### Prerequis local
 
 Installer Supabase CLI puis connecter le projet si necessaire :
