@@ -409,6 +409,35 @@ export type Database = {
         };
         Returns: boolean;
       };
+      create_company_onboarding: {
+        Args: {
+          tenant_name: string;
+          legal_name: string;
+          trade_name?: string | null;
+          legal_form?: string | null;
+          niu?: string | null;
+          rccm?: string | null;
+          sector?: string | null;
+          address?: string | null;
+          city?: string | null;
+          tax_center?: string | null;
+          tax_regime?: string;
+          dsf_type?: string;
+          accounting_system?: string;
+          starts_on?: string;
+          ends_on?: string;
+          vat_enabled?: boolean;
+          withholding_enabled?: boolean;
+          stock_enabled?: boolean;
+          fixed_assets_enabled?: boolean;
+          payroll_enabled?: boolean;
+        };
+        Returns: {
+          tenant_id: string;
+          company_id: string;
+          fiscal_year_id: string;
+        }[];
+      };
       is_platform_admin: {
         Args: { check_user_id?: string };
         Returns: boolean;
