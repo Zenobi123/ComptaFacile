@@ -54,6 +54,14 @@ Le dossier `supabase/migrations` contient la base multi-tenant initiale du SaaS 
 
 La migration active RLS sur les tables sensibles et ajoute des fonctions SQL internes pour verifier l'appartenance a un tenant, les roles autorises et l'acces super administrateur SaaS.
 
+Une fonction RPC `create_company_onboarding` initialise le premier dossier d'une entreprise en une transaction :
+
+- tenant et appartenance `admin_entreprise` de l'utilisateur connecte ;
+- entreprise et profil fiscal ;
+- exercice ouvert et periodes mensuelles ;
+- journaux standards ;
+- entree d'audit.
+
 ### Prerequis local
 
 Installer Supabase CLI puis connecter le projet si necessaire :
@@ -89,6 +97,7 @@ supabase db push
 ## Modules MVP
 
 - Authentification
+- Onboarding entreprise
 - Tableau de bord
 - Comptabilite OHADA
 - Ventes et achats

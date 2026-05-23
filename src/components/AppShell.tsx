@@ -1,12 +1,15 @@
 import { motion } from "framer-motion";
-import { Menu, Search, ShieldCheck, X } from "lucide-react";
+import { LogOut, Menu, Search, ShieldCheck, X } from "lucide-react";
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { navItems } from "../data/modules";
+import { useAuth } from "../features/auth/AuthProvider";
 import { cn } from "../lib/utils";
 
 export function AppShell() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const { isConfigured, signOut, user } = useAuth();
+  const initials = user?.email?.slice(0, 2).toUpperCase() ?? "NO";
 
   return (
     <div className="min-h-screen bg-surface text-ink">
@@ -78,11 +81,20 @@ export function AppShell() {
             </div>
             <div className="flex items-center gap-3">
               <span className="hidden rounded-full bg-ledger/10 px-3 py-1 text-xs font-semibold text-ledger sm:inline-flex">
-                MVP en initialisation
+                {isConfigured ? "Session active" : "Mode apercu"}
               </span>
               <div className="h-10 w-10 rounded-full bg-ink text-center text-sm font-semibold leading-10 text-white">
-                NO
+                {initials}
               </div>
+              {isConfigured ? (
+                <button
+                  onClick={() => void signOut()}
+                  className="flex h-10 w-10 items-center justify-center rounded-md border border-line bg-white text-ink/70 transition hover:border-ledger hover:text-ledger"
+                  aria-label="Se deconnecter"
+                >
+                  <LogOut size={18} aria-hidden="true" />
+                </button>
+              ) : null}
             </div>
           </div>
         </header>

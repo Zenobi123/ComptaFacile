@@ -22,6 +22,7 @@ import type { LucideIcon } from "lucide-react";
 
 export type ModuleKey =
   | "dashboard"
+  | "onboarding"
   | "accounting"
   | "billing"
   | "treasury"
@@ -38,6 +39,12 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
   { key: "dashboard", label: "Tableau de bord", path: "/", icon: Gauge },
+  {
+    key: "onboarding",
+    label: "Onboarding",
+    path: "/onboarding",
+    icon: Building2,
+  },
   {
     key: "accounting",
     label: "Comptabilite",
