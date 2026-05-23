@@ -27,6 +27,8 @@ export type JournalEntryStatus =
   | "validated"
   | "rejected"
   | "reversed";
+export type ThirdPartyType = "customer" | "supplier" | "administration" | "employee" | "partner";
+export type SalesInvoiceStatus = "draft" | "issued" | "paid" | "cancelled";
 
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row;
@@ -374,6 +376,110 @@ export type Database = {
           updated_at?: string;
         }
       >;
+      third_parties: Table<
+        AuditColumns & {
+          id: string;
+          tenant_id: string;
+          company_id: string;
+          party_type: ThirdPartyType;
+          name: string;
+          niu: string | null;
+          email: string | null;
+          phone: string | null;
+          city: string | null;
+          address: string | null;
+          is_active: boolean;
+        },
+        {
+          id?: string;
+          tenant_id: string;
+          company_id: string;
+          party_type: ThirdPartyType;
+          name: string;
+          niu?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          city?: string | null;
+          address?: string | null;
+          is_active?: boolean;
+          created_by?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        }
+      >;
+      sales_invoices: Table<
+        AuditColumns & {
+          id: string;
+          tenant_id: string;
+          company_id: string;
+          fiscal_year_id: string;
+          customer_id: string;
+          invoice_number: string;
+          invoice_date: string;
+          due_date: string | null;
+          status: SalesInvoiceStatus;
+          currency: string;
+          subtotal_amount: number;
+          tax_amount: number;
+          total_amount: number;
+          notes: string | null;
+        },
+        {
+          id?: string;
+          tenant_id: string;
+          company_id: string;
+          fiscal_year_id: string;
+          customer_id: string;
+          invoice_number: string;
+          invoice_date: string;
+          due_date?: string | null;
+          status?: SalesInvoiceStatus;
+          currency?: string;
+          subtotal_amount?: number;
+          tax_amount?: number;
+          total_amount?: number;
+          notes?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        }
+      >;
+      sales_invoice_lines: Table<
+        AuditColumns & {
+          id: string;
+          tenant_id: string;
+          company_id: string;
+          invoice_id: string;
+          line_number: number;
+          description: string;
+          quantity: number;
+          unit_price: number;
+          tax_rate: number;
+          subtotal_amount: number;
+          tax_amount: number;
+          total_amount: number;
+        },
+        {
+          id?: string;
+          tenant_id: string;
+          company_id: string;
+          invoice_id: string;
+          line_number: number;
+          description: string;
+          quantity?: number;
+          unit_price?: number;
+          tax_rate?: number;
+          subtotal_amount?: number;
+          tax_amount?: number;
+          total_amount?: number;
+          created_by?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        }
+      >;
       audit_logs: Table<
         {
           id: string;
@@ -453,7 +559,30 @@ export type Database = {
         };
         Returns: string;
       };
+      create_sales_invoice: {
+        Args: {
+          tenant_id: string;
+          company_id: string;
+          fiscal_year_id: string;
+          customer_id: string;
+          invoice_number: string;
+          invoice_date: string;
+          due_date?: string | null;
+          status?: SalesInvoiceStatus;
+          notes?: string | null;
+          lines?: Json;
+        };
+        Returns: string;
+      };
       get_accounting_snapshot: {
+        Args: {
+          p_tenant_id: string;
+          p_company_id: string;
+          p_fiscal_year_id: string;
+        };
+        Returns: Json;
+      };
+      get_billing_snapshot: {
         Args: {
           p_tenant_id: string;
           p_company_id: string;
@@ -477,6 +606,8 @@ export type Database = {
       fiscal_year_status: FiscalYearStatus;
       accounting_period_status: AccountingPeriodStatus;
       journal_entry_status: JournalEntryStatus;
+      third_party_type: ThirdPartyType;
+      sales_invoice_status: SalesInvoiceStatus;
     };
     CompositeTypes: Record<string, never>;
   };

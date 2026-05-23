@@ -77,6 +77,13 @@ Une fonction RPC `get_accounting_snapshot` alimente les premieres vues de consul
 - balance de travail par compte, hors brouillons ;
 - controle d'appartenance au tenant avant lecture.
 
+Le module commercial ajoute les fondations ventes :
+
+- clients dans `third_parties` ;
+- factures et lignes de vente ;
+- RPC `create_sales_invoice` pour creer une facture avec totalisation serveur ;
+- RPC `get_billing_snapshot` pour les clients, dernieres factures et indicateurs de vente.
+
 ### Prerequis local
 
 Installer Supabase CLI puis connecter le projet si necessaire :
