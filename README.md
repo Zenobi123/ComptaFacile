@@ -60,6 +60,30 @@ La configuration Netlify est dans `netlify.toml` :
 - redirection SPA vers `/index.html`
 - fonction de sante : `netlify/functions/health.ts`
 
+## CI GitHub
+
+Le workflow `.github/workflows/ci.yml` s'execute sur les pull requests, les push vers `main` et les branches `feature/**`, ainsi qu'en lancement manuel.
+
+Il verifie :
+
+- installation reproductible avec `npm ci` ;
+- build frontend avec `npm run build` ;
+- disponibilite du CLI Supabase avec `npx supabase --version` ;
+- smoke test Supabase avec `npm run verify:supabase` si les secrets de verification sont configures.
+
+Secrets GitHub attendus pour activer le smoke test Supabase dans la CI :
+
+```text
+SUPABASE_VERIFY_URL
+SUPABASE_VERIFY_ANON_KEY
+SUPABASE_VERIFY_USER_EMAIL
+SUPABASE_VERIFY_USER_PASSWORD
+SUPABASE_VERIFY_INTRUDER_EMAIL
+SUPABASE_VERIFY_INTRUDER_PASSWORD
+```
+
+Si `SUPABASE_VERIFY_URL` ou `SUPABASE_VERIFY_ANON_KEY` est absent, le workflow saute uniquement le smoke test Supabase et conserve les controles de build. Utiliser un projet Supabase Cloud dedie a la verification, jamais la production.
+
 ## Variables d'environnement
 
 Copier `.env.example` vers `.env.local` et renseigner :
