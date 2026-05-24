@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - feature/**
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and static validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_VERIFY_URL: ${{ secrets.SUPABASE_VERIFY_URL }}
+      SUPABASE_VERIFY_ANON_KEY: ${{ secrets.SUPABASE_VERIFY_ANON_KEY }}
+      SUPABASE_VERIFY_USER_EMAIL: ${{ secrets.SUPABASE_VERIFY_USER_EMAIL }}
+      SUPABASE_VERIFY_USER_PASSWORD: ${{ secrets.SUPABASE_VERIFY_USER_PASSWORD }}
+      SUPABASE_VERIFY_INTRUDER_EMAIL: ${{ secrets.SUPABASE_VERIFY_INTRUDER_EMAIL }}
+      SUPABASE_VERIFY_INTRUDER_PASSWORD: ${{ secrets.SUPABASE_VERIFY_INTRUDER_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Check Supabase CLI
+        run: npx supabase --version
+
+      - name: Supabase smoke test
+        if: ${{ env.SUPABASE_VERIFY_URL != '' && env.SUPABASE_VERIFY_ANON_KEY != '' }}
+        run: npm run verify:supabase
+
+      - name: Supabase smoke test skipped
+        if: ${{ env.SUPABASE_VERIFY_URL == '' || env.SUPABASE_VERIFY_ANON_KEY == '' }}
+        run: echo "Supabase smoke test skipped because SUPABASE_VERIFY_URL or SUPABASE_VERIFY_ANON_KEY is not configured."
