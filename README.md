@@ -18,6 +18,35 @@ npm.cmd install
 npm.cmd run dev
 ```
 
+## Validation Supabase locale
+
+La validation complete des migrations et des politiques RLS necessite Docker Desktop et le CLI Supabase installe dans les dependances du projet.
+
+```powershell
+npm.cmd install
+npm.cmd run supabase:start
+npm.cmd run supabase:reset
+npm.cmd run verify:supabase
+```
+
+Les scripts disponibles sont :
+
+- `npm.cmd run supabase:start` : demarre la stack Supabase locale.
+- `npm.cmd run supabase:reset` : recree la base locale et applique toutes les migrations.
+- `npm.cmd run supabase:status` : affiche les URLs et cles locales.
+- `npm.cmd run verify:supabase` : execute un smoke test Auth, onboarding, comptabilite, ventes, tresorerie, fiscalite et isolation RLS.
+
+Si Docker Desktop n'est pas disponible, utiliser un projet Supabase Cloud de test, jamais la production :
+
+```powershell
+npx.cmd supabase login
+npx.cmd supabase link --project-ref <project-ref-test>
+npx.cmd supabase db push
+npm.cmd run verify:supabase
+```
+
+Dans ce cas, renseigner `.env.local` avec l'URL et la cle anon du projet de test. Les confirmations email doivent etre desactivees pour les utilisateurs de verification, ou les deux utilisateurs de test doivent etre precrees.
+
 ## Build Netlify
 
 ```powershell
@@ -103,22 +132,21 @@ Le module fiscalite ajoute :
 Installer Supabase CLI puis connecter le projet si necessaire :
 
 ```powershell
-supabase login
-supabase init
-supabase link --project-ref <project-ref>
+npx.cmd supabase login
+npx.cmd supabase link --project-ref <project-ref>
 ```
 
 Pour appliquer les migrations sur une base locale Supabase :
 
 ```powershell
-supabase start
-supabase db reset
+npm.cmd run supabase:start
+npm.cmd run supabase:reset
 ```
 
 Pour pousser les migrations vers un projet Supabase lie :
 
 ```powershell
-supabase db push
+npx.cmd supabase db push
 ```
 
 ### Regles RLS attendues
